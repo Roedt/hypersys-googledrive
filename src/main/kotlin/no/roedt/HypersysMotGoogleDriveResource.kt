@@ -27,9 +27,6 @@ class HypersysMotGoogleDriveResource(
         val ro = alleLag.single { (it as Map<String, *>)["name"] == "Rødt Oslo" }
 
         val orgId = ((ro) as Map<*, *>)["id"].toString()
-        val mittLag = hypersysKlient.hentLag(token = "Bearer ${token["access_token"]}", orgId = orgId)
-
-        val organs = (mittLag as Map<*, *>)["organs"] as List<*>
 
         val organsFraHS = hypersysKlient.hentAlleOrgan(token = "Bearer ${token["access_token"]}", orgId = orgId)
 
