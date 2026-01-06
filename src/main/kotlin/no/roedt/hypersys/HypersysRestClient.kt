@@ -11,8 +11,10 @@ import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.core.MediaType
 import no.roedt.hypersys.externalModel.IsMember
+import no.roedt.hypersys.externalModel.Organ
 import no.roedt.hypersys.externalModel.Organisasjonsledd
 import no.roedt.hypersys.externalModel.Profile
+import no.roedt.hypersys.externalModel.SingleOrgan
 import no.roedt.hypersys.externalModel.membership.Membership
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient
 import java.time.LocalDate
@@ -37,7 +39,7 @@ interface HypersysRestClient {
     fun tokenSystem(
         @HeaderParam("Authorization") base64Credentials: String,
         @FormParam("grant_type") grantType: String = "client_credentials"
-    ): Map<String, String>
+    ): GyldigSystemToken
 
     @GET
     @Path("/membership/api/membership/{hypersysLokallagId}/{aar}/")
@@ -52,7 +54,7 @@ interface HypersysRestClient {
     @Path("/org/api/")
     fun hentAlleLokallag(
         @HeaderParam("Authorization") token: String // Bearer
-    ) : List<Any>
+    ) : List<Organisasjonsledd>
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -68,9 +70,7 @@ interface HypersysRestClient {
     fun hentAlleOrgan(
         @HeaderParam("Authorization") token: String, // Bearer,
         @PathParam("orgid") orgId: String
-    ) : Any
-
-
+    ) : Map<String, List<Organ>>
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -79,10 +79,7 @@ interface HypersysRestClient {
         @HeaderParam("Authorization") token: String, // Bearer,
         @PathParam("orgid") orgId: String,
         @PathParam("organid") organId: String
-    ) : Any
-
-
-
+    ) : SingleOrgan
 
     @GET
     @Path("/membership/api/is_member/{hypersysId}/")

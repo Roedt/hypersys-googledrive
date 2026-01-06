@@ -4,43 +4,54 @@ import jakarta.ws.rs.GET
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.core.MediaType
-import no.roedt.google.GCPSecretFactory
+import no.roedt.hypersys.GyldigSystemToken
 import no.roedt.hypersys.HypersysRestClient
+import no.roedt.hypersys.externalModel.Organisasjonsledd
 import org.eclipse.microprofile.rest.client.inject.RestClient
 import kotlin.io.encoding.Base64
 
 @Path("/integrer")
 class HypersysMotGoogleDriveResource(
     @RestClient val hypersysKlient: HypersysRestClient,
-    val secretFactory: GCPSecretFactory
+    val secretFactory: EnvSecretFactory,
 ) {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    fun integrer(): List<Any?> {
+    fun integrer(): Map<String, List<String?>> {
+        val bearerToken = "Bearer ${hentBearerToken().access_token}"
+
+        val alleLag = hypersysKlient.hentAlleLokallag(bearerToken)
+
+        val lagOgEposter = hypersysKlient.hentAlleLokallag(bearerToken)
+            .filter { it.parent == alleLag.single { l -> l.name == "Rødt Oslo" }.id }
+            .associate { it.name to finnEposter(bearerToken, it) }
+        return lagOgEposter
+    }
+
+    private fun finnEposter(
+        bearerToken: String,
+        organisasjonsledd: Organisasjonsledd,
+    ): List<String?> {
+        val organsFraHS = hypersysKlient.hentAlleOrgan(token = bearerToken, orgId = organisasjonsledd.id.toString())
+
+        val detaljerOsloorgan = organsFraHS["organs"]!!
+            .filter { it.organ_type == "Lagsstyre" }
+            .map {
+                hypersysKlient.hentOrgan(
+                    token = bearerToken,
+                    orgId = it.id.toString(),
+                    organId = it.id.toString()
+                )
+            }
+            .singleOrNull { it.members.isNotEmpty() }
+
+        val eposter = detaljerOsloorgan?.members?.map { m -> m.email }?.distinct() ?: listOf()
+        return eposter
+    }
+
+    private fun hentBearerToken(): GyldigSystemToken {
         val id = secretFactory.getHypersysClientId()
         val secret = secretFactory.getHypersysClientSecret()
-        val creds = Base64.encode("$id:$secret".toByteArray())
-        val token = hypersysKlient.tokenSystem(base64Credentials = "Basic $creds")
-
-        val alleLag = hypersysKlient.hentAlleLokallag("Bearer ${token["access_token"]}")
-
-        val ro = alleLag.single { (it as Map<String, *>)["name"] == "Rødt Oslo" }
-
-        val orgId = ((ro) as Map<*, *>)["id"].toString()
-
-        val organsFraHS = hypersysKlient.hentAlleOrgan(token = "Bearer ${token["access_token"]}", orgId = orgId)
-
-        val alleOrganIOslo = (((organsFraHS as Map<*,*>)["organs"]) as List<Map<*,*>>)
-
-        val detaljerOsloorgan = alleOrganIOslo.filter { it["organ_type"] == "Fylkesstyre" }
-            .map { hypersysKlient.hentOrgan(token = "Bearer ${token["access_token"]}", orgId = orgId, organId = it["id"]!!.toString()) }
-            .map { it as Map<*,*> }
-            .single { (it["members_list"] as List<*>).isNotEmpty() }
-
-        val emailerIOslostyret = (detaljerOsloorgan["members_list"] as List<Map<String, *>>).map { it["email"] }
-
-
-
-        return emailerIOslostyret
+        return hypersysKlient.tokenSystem(base64Credentials = "Basic ${Base64.encode("$id:$secret".toByteArray())}")
     }
 }
