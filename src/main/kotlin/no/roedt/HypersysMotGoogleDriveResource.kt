@@ -16,13 +16,34 @@ class HypersysMotGoogleDriveResource(
 ) {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    fun integrer(): Map<String, String> {
+    fun integrer(): List<Any?> {
         val id = secretFactory.getHypersysClientId()
         val secret = secretFactory.getHypersysClientSecret()
         val creds = Base64.encode("$id:$secret".toByteArray())
         val token = hypersysKlient.tokenSystem(base64Credentials = "Basic $creds")
 
+        val alleLag = hypersysKlient.hentAlleLokallag("Bearer ${token["access_token"]}")
 
-        return token
+        val ro = alleLag.single { (it as Map<String, *>)["name"] == "Rødt Oslo" }
+
+        val orgId = ((ro) as Map<*, *>)["id"].toString()
+        val mittLag = hypersysKlient.hentLag(token = "Bearer ${token["access_token"]}", orgId = orgId)
+
+        val organs = (mittLag as Map<*, *>)["organs"] as List<*>
+
+        val organsFraHS = hypersysKlient.hentAlleOrgan(token = "Bearer ${token["access_token"]}", orgId = orgId)
+
+        val alleOrganIOslo = (((organsFraHS as Map<*,*>)["organs"]) as List<Map<*,*>>)
+
+        val detaljerOsloorgan = alleOrganIOslo.filter { it["organ_type"] == "Fylkesstyre" }
+            .map { hypersysKlient.hentOrgan(token = "Bearer ${token["access_token"]}", orgId = orgId, organId = it["id"]!!.toString()) }
+            .map { it as Map<*,*> }
+            .single { (it["members_list"] as List<*>).isNotEmpty() }
+
+        val emailerIOslostyret = (detaljerOsloorgan["members_list"] as List<Map<String, *>>).map { it["email"] }
+
+
+
+        return emailerIOslostyret
     }
 }

@@ -52,7 +52,37 @@ interface HypersysRestClient {
     @Path("/org/api/")
     fun hentAlleLokallag(
         @HeaderParam("Authorization") token: String // Bearer
-    ) : List<Organisasjonsledd>
+    ) : List<Any>
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/org/api/{orgid}/")
+    fun hentLag(
+        @HeaderParam("Authorization") token: String, // Bearer,
+        @PathParam("orgid") orgId: String
+    ) : Map<String, Any>
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/org/api/{orgid}/organ/")
+    fun hentAlleOrgan(
+        @HeaderParam("Authorization") token: String, // Bearer,
+        @PathParam("orgid") orgId: String
+    ) : Any
+
+
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/org/api/{orgid}/organ/{organid}/")
+    fun hentOrgan(
+        @HeaderParam("Authorization") token: String, // Bearer,
+        @PathParam("orgid") orgId: String,
+        @PathParam("organid") organId: String
+    ) : Any
+
+
+
 
     @GET
     @Path("/membership/api/is_member/{hypersysId}/")
