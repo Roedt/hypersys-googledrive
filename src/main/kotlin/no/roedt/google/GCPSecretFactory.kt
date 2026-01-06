@@ -10,22 +10,18 @@ import org.eclipse.microprofile.config.inject.ConfigProperty
 class GCPSecretFactory(
     @ConfigProperty(name = "secretManagerProjectId", defaultValue = "")
     var secretManagerProjectId: String,
-    @ConfigProperty(name = "hypersysClientId")
-    private var hypersysClientId: String,
-    @ConfigProperty(name = "hypersysClientSecret")
-    private var hypersysClientSecret: String
 ) {
     private lateinit var client: SecretManagerServiceClient
 
     @PostConstruct
     fun setup() {
-//        client = SecretManagerServiceClient.create()
+        client = SecretManagerServiceClient.create()
     }
 
 
-    fun getHypersysClientId() = hypersysClientId //getSecretFromSecretManager(GCPSecretManagerKey.hypersysClientId)
+    fun getHypersysClientId() = getSecretFromSecretManager(GCPSecretManagerKey.hypersysClientId)
 
-    fun getHypersysClientSecret() = hypersysClientSecret //getSecretFromSecretManager(GCPSecretManagerKey.hypersysClientSecret)
+    fun getHypersysClientSecret() = getSecretFromSecretManager(GCPSecretManagerKey.hypersysClientSecret)
 
     private fun getSecretFromSecretManager(secretName: GCPSecretManagerKey): String {
         val secretVersionName = SecretVersionName.of(secretManagerProjectId, secretName.name, "latest")
