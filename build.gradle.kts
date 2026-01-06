@@ -16,6 +16,8 @@ val quarkusPlatformArtifactId: String by project
 val quarkusPlatformVersion: String by project
 
 dependencies {
+    implementation("org.apache.camel.quarkus:camel-quarkus-google-drive")
+    implementation(enforcedPlatform("${quarkusPlatformGroupId}:quarkus-camel-bom:${quarkusPlatformVersion}"))
     implementation("io.quarkiverse.googlecloudservices:quarkus-google-cloud-secret-manager")
     implementation(enforcedPlatform("${quarkusPlatformGroupId}:quarkus-google-cloud-services-bom:${quarkusPlatformVersion}"))
     implementation("io.quarkiverse.microprofile:quarkus-microprofile:3.4.1")
