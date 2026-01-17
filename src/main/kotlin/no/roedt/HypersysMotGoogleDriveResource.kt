@@ -17,7 +17,7 @@ class HypersysMotGoogleDriveResource(
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     fun integrer() {
-        val fraHypersys: Map<String, List<String?>> = hypersysService.hentFraHypersys()
+        val fraHypersys: Map<String, List<String?>> = hypersysService.hentFraHypersys("Rødt Oslo")
 
         if (fraHypersys.size != 1 && !fraHypersys.keys.first().startsWith("Testlag")) {
             println("Skal ikkje køyre på ordentleg per no")

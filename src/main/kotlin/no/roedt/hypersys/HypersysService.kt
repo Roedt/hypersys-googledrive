@@ -8,7 +8,7 @@ import org.eclipse.microprofile.rest.client.inject.RestClient
 import kotlin.io.encoding.Base64
 
 interface HypersysService {
-    fun hentFraHypersys(): Map<String, List<String?>>
+    fun hentFraHypersys(lag: String): Map<String, List<String?>>
 }
 
 @Dependent
@@ -17,13 +17,13 @@ class EkteHypersysService(
     @RestClient val hypersysKlient: HypersysRestClient,
     val secretFactory: SecretFactory,
 ) : HypersysService {
-    override fun hentFraHypersys(): Map<String, List<String?>> {
+    override fun hentFraHypersys(lag: String): Map<String, List<String?>> {
         val bearerToken = "Bearer ${hentBearerToken().access_token}"
 
         val alleLag = hypersysKlient.hentAlleLokallag(bearerToken)
 
         val lagOgEposter = hypersysKlient.hentAlleLokallag(bearerToken)
-            .filter { it.parent == alleLag.single { l -> l.name == "Rødt Oslo" }.id }
+            .filter { it.parent == alleLag.single { l -> l.name == lag }.id }
             .associate { it.name to finnEposter(bearerToken, it) }
         // TODO: Den tomme return-en her er for å sikre at vi ikkje ved eit uhell faktisk lager ekte data
         return mapOf()
@@ -60,6 +60,6 @@ class EkteHypersysService(
 @Dependent
 @IfBuildProperty(name = "hypersys.ekte", stringValue = "false")
 class FakeHypersysService : HypersysService {
-    override fun hentFraHypersys(): Map<String, List<String?>> = mapOf("Testlag2" to listOf("raudtosloteknisk@gmail.com"))
+    override fun hentFraHypersys(lag: String): Map<String, List<String?>> = mapOf("Testlag2" to listOf("raudtosloteknisk@gmail.com"))
 
 }
