@@ -4,6 +4,7 @@ import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.drive.Drive
 import com.google.api.services.drive.DriveScopes
+import com.google.api.services.drive.model.File
 import com.google.api.services.drive.model.Permission
 import com.google.auth.http.HttpCredentialsAdapter
 import com.google.auth.oauth2.GoogleCredentials
@@ -16,7 +17,9 @@ import kotlin.io.path.inputStream
 
 @Dependent
 class GoogleDriveService(val credentialsFactory: GoogleCredentialsFactory) {
-    fun kopleMotGoogleDrive(): Drive = Drive.Builder(
+    private val typeMappe = "application/vnd.google-apps.folder"
+
+    private fun kopleMotGoogleDrive(): Drive = Drive.Builder(
         GoogleNetHttpTransport.newTrustedTransport(),
         GsonFactory.getDefaultInstance(),
         HttpCredentialsAdapter(credentialsFactory.createCredentials())
@@ -25,12 +28,57 @@ class GoogleDriveService(val credentialsFactory: GoogleCredentialsFactory) {
         .build()
 
 
-    fun giTilgang(epost: String): Permission = Permission().also {
+    private fun giTilgang(epost: String): Permission = Permission().also {
         it.emailAddress = epost
         it.kind = "drive#permission"
         it.role = "writer"
         it.type = "user"
     }
+
+    fun giTilgangTilMappe(lagOgFolk: Map<String, List<String?>>, rotmappenavn: String) {
+        val service = kopleMotGoogleDrive()
+
+        val rotmappeId = finnRotmappe(service, rotmappenavn)
+
+        val undermapper = finnUndermapper(service, rotmappeId)
+
+        lagOgFolk.forEach { (lag, folk) ->
+            val lagetsMappe = undermapper.singleOrNull { it.name == lag }
+            if (lagetsMappe == null) {
+                lagMappe(service, lag, rotmappeId)
+            }
+            if (lagetsMappe != null) {
+                folk.filterNotNull().forEach { person ->
+                    giTilgangTilMappe(service, lagetsMappe, person)
+                }
+            }
+        }
+    }
+
+    private fun finnRotmappe(service: Drive, rotmappenavn: String): File = (service.files().list()
+        .setFields("files(id, parents)")
+        .setQ("mimeType = '$typeMappe' and name = '$rotmappenavn'")
+        .execute()
+        .filter { (((it.value as? File)))?.parents == null }
+        ["files"] as List<*>)
+        .single() as File
+
+    private fun lagMappe(service: Drive, lag: String, rotmappeId: File) =
+        service.files().create(File().also {
+            it.name = lag
+            it.parents = listOf(rotmappeId.id)
+            it.mimeType = typeMappe
+        }).execute()
+
+    private fun finnUndermapper(service: Drive, forelder: File): List<File> = service.files().list()
+        .setFields("files(id, name)")
+        .setQ("mimeType = '$typeMappe' and '${forelder.id}' in parents").execute()
+        .files
+        .filterNotNull()
+
+    private fun giTilgangTilMappe(service: Drive, file: File, person: String) =
+        service.permissions()
+            .create(file.id, giTilgang(person)).execute()
 }
 
 interface GoogleCredentialsFactory {
