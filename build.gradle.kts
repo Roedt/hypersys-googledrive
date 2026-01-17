@@ -42,8 +42,8 @@ group = "no.roedt"
 version = "1.0.0-SNAPSHOT"
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_24
-    targetCompatibility = JavaVersion.VERSION_24
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
 }
 
 tasks.withType<Test> {
@@ -63,7 +63,7 @@ allOpen {
 kotlin {
     compilerOptions {
         javaParameters = true
-        jvmTarget.set(JvmTarget.JVM_24)
+        jvmTarget.set(JvmTarget.JVM_25)
         kotlinDaemonJvmArgs = listOf("--add-opens java.base/java.lang=ALL-UNNAMED")
         /*
         Denne er for å unngå unødige advarsler om https://youtrack.jetbrains.com/issue/KT-73255
