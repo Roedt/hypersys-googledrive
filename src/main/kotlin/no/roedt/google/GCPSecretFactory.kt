@@ -24,24 +24,17 @@ class GCPSecretFactory(
     }
 
 
-    override fun getHypersysClientId() = getSecretFromSecretManager(GCPSecretManagerKey.hypersysClientId)
+    override fun getHypersysClientId() = getSecretFromSecretManager(GCPSecretManagerKey.HYPERSYS_CLIENT_ID)
 
-    override fun getHypersysClientSecret() = getSecretFromSecretManager(GCPSecretManagerKey.hypersysClientSecret)
+    override fun getHypersysClientSecret() = getSecretFromSecretManager(GCPSecretManagerKey.HYPERSYS_CLIENT_SECRET)
 
     private fun getSecretFromSecretManager(secretName: GCPSecretManagerKey): String {
-        val secretVersionName = SecretVersionName.of(secretManagerProjectId, secretName.name, "latest")
+        val secretVersionName = SecretVersionName.of(secretManagerProjectId, secretName.key, "latest")
         return client.accessSecretVersion(secretVersionName).payload.data.toStringUtf8()
     }
 }
 
-private enum class GCPSecretManagerKey {
-    privatekey,
-    frontendTokenKey,
-    hypersysBrukerId,
-    hypersysBrukerSecret,
-    hypersysClientId,
-    hypersysClientSecret,
-    frontendSystembruker,
-    frontendSystembrukerPassord,
-    encryptionKey,
+private enum class GCPSecretManagerKey(val key: String) {
+    HYPERSYS_CLIENT_ID("hypersysClientId"),
+    HYPERSYS_CLIENT_SECRET("hypersysClientSecret")
 }
