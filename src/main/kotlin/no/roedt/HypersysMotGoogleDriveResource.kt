@@ -18,6 +18,10 @@ class HypersysMotGoogleDriveResource(
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     fun integrer(): Map<String, List<String?>> {
+        return hentFraHypersys()
+    }
+
+    private fun hentFraHypersys(): Map<String, List<String?>> {
         val bearerToken = "Bearer ${hentBearerToken().access_token}"
 
         val alleLag = hypersysKlient.hentAlleLokallag(bearerToken)
