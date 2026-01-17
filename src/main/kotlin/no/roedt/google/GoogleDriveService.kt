@@ -19,22 +19,6 @@ import kotlin.io.path.inputStream
 class GoogleDriveService(val credentialsFactory: GoogleCredentialsFactory) {
     private val typeMappe = "application/vnd.google-apps.folder"
 
-    private fun kopleMotGoogleDrive(): Drive = Drive.Builder(
-        GoogleNetHttpTransport.newTrustedTransport(),
-        GsonFactory.getDefaultInstance(),
-        HttpCredentialsAdapter(credentialsFactory.createCredentials())
-    )
-        .setApplicationName("hypersys-googledrive")
-        .build()
-
-
-    private fun giTilgang(epost: String): Permission = Permission().also {
-        it.emailAddress = epost
-        it.kind = "drive#permission"
-        it.role = "writer"
-        it.type = "user"
-    }
-
     fun giTilgangTilMappe(lagOgFolk: Map<String, List<String?>>, rotmappenavn: String) {
         val service = kopleMotGoogleDrive()
 
@@ -54,6 +38,14 @@ class GoogleDriveService(val credentialsFactory: GoogleCredentialsFactory) {
             }
         }
     }
+
+    private fun kopleMotGoogleDrive(): Drive = Drive.Builder(
+        GoogleNetHttpTransport.newTrustedTransport(),
+        GsonFactory.getDefaultInstance(),
+        HttpCredentialsAdapter(credentialsFactory.createCredentials())
+    )
+        .setApplicationName("hypersys-googledrive")
+        .build()
 
     private fun finnRotmappe(service: Drive, rotmappenavn: String): File = (service.files().list()
         .setFields("files(id, parents)")
@@ -79,6 +71,13 @@ class GoogleDriveService(val credentialsFactory: GoogleCredentialsFactory) {
     private fun giTilgangTilMappe(service: Drive, file: File, person: String) =
         service.permissions()
             .create(file.id, giTilgang(person)).execute()
+
+    private fun giTilgang(epost: String): Permission = Permission().also {
+        it.emailAddress = epost
+        it.kind = "drive#permission"
+        it.role = "writer"
+        it.type = "user"
+    }
 }
 
 interface GoogleCredentialsFactory {
