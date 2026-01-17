@@ -50,6 +50,10 @@ jobs:
       contents: read
       id-token: write
     steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - name: auth
         uses: 'google-github-actions/auth@v3'
         with:
