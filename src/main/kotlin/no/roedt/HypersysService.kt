@@ -1,5 +1,6 @@
 package no.roedt
 
+import io.quarkus.arc.properties.IfBuildProperty
 import jakarta.enterprise.context.Dependent
 import no.roedt.hypersys.GyldigSystemToken
 import no.roedt.hypersys.HypersysRestClient
@@ -7,12 +8,17 @@ import no.roedt.hypersys.externalModel.Organisasjonsledd
 import org.eclipse.microprofile.rest.client.inject.RestClient
 import kotlin.io.encoding.Base64
 
+interface HypersysService {
+    fun hentFraHypersys(): Map<String, List<String?>>
+}
+
 @Dependent
-class HypersysService(
+@IfBuildProperty(name = "hypersys.ekte", stringValue = "true")
+class EkteHypersysService(
     @RestClient val hypersysKlient: HypersysRestClient,
     val secretFactory: SecretFactory,
-) {
-    fun hentFraHypersys(): Map<String, List<String?>> {
+) : HypersysService {
+    override fun hentFraHypersys(): Map<String, List<String?>> {
         val bearerToken = "Bearer ${hentBearerToken().access_token}"
 
         val alleLag = hypersysKlient.hentAlleLokallag(bearerToken)
@@ -20,7 +26,8 @@ class HypersysService(
         val lagOgEposter = hypersysKlient.hentAlleLokallag(bearerToken)
             .filter { it.parent == alleLag.single { l -> l.name == "Rødt Oslo" }.id }
             .associate { it.name to finnEposter(bearerToken, it) }
-        return lagOgEposter
+        // TODO: Den tomme return-en her er for å sikre at vi ikkje ved eit uhell faktisk lager ekte data
+        return mapOf()
     }
 
     private fun finnEposter(
@@ -49,4 +56,11 @@ class HypersysService(
         val secret = secretFactory.getHypersysClientSecret()
         return hypersysKlient.tokenSystem(base64Credentials = "Basic ${Base64.encode("$id:$secret".toByteArray())}")
     }
+}
+
+@Dependent
+@IfBuildProperty(name = "hypersys.ekte", stringValue = "false")
+class FakeHypersysService : HypersysService {
+    override fun hentFraHypersys(): Map<String, List<String?>> = mapOf("Testlag2" to listOf("raudtosloteknisk@gmail.com"))
+
 }
