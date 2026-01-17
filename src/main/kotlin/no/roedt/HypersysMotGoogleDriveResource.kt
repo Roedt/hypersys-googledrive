@@ -23,7 +23,9 @@ class HypersysMotGoogleDriveResource(
     private fun giTilgangTilMappe() {
         val service = googleDriveService.kopleMotGoogleDrive()
 
-        service.files().list().execute().files.forEach { file ->
+        service.files().list().execute().files
+            .filter { it.mimeType == "application/vnd.google-apps.folder" }
+            .forEach { file ->
             service.permissions().create(file.id, googleDriveService.giTilgang("raudtosloteknisk@gmail.com")).execute()
         }
     }
