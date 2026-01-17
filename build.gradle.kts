@@ -55,6 +55,7 @@ kotlin {
     compilerOptions {
         javaParameters = true
         jvmTarget.set(JvmTarget.JVM_24)
+        kotlinDaemonJvmArgs = listOf("--add-opens java.base/java.lang=ALL-UNNAMED")
         /*
         Denne er for å unngå unødige advarsler om https://youtrack.jetbrains.com/issue/KT-73255
         Vi bruker egentlig bare konstruktør-varianten, men vil egentlig helst holde oss til kotlin sin standardvariant
