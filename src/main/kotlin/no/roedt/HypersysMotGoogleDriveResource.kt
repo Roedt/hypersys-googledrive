@@ -13,7 +13,7 @@ import kotlin.io.encoding.Base64
 @Path("/integrer")
 class HypersysMotGoogleDriveResource(
     @RestClient val hypersysKlient: HypersysRestClient,
-    val secretFactory: EnvSecretFactory,
+    val secretFactory: SecretFactory,
 ) {
     @GET
     @Produces(MediaType.APPLICATION_JSON)

@@ -2,6 +2,7 @@ package no.roedt.google
 
 import com.google.cloud.secretmanager.v1.SecretManagerServiceClient
 import com.google.cloud.secretmanager.v1.SecretVersionName
+import io.quarkus.arc.profile.UnlessBuildProfile
 import jakarta.annotation.PostConstruct
 import jakarta.annotation.Priority
 import jakarta.enterprise.context.Dependent
@@ -10,6 +11,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty
 
 @Dependent
 @Priority(100)
+@UnlessBuildProfile("dev")
 class GCPSecretFactory(
     @ConfigProperty(name = "secretManagerProjectId", defaultValue = "")
     var secretManagerProjectId: String,

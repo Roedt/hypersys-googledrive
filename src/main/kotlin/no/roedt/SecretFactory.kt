@@ -12,7 +12,6 @@ interface SecretFactory {
 
 @Dependent
 @IfBuildProfile("dev")
-@DefaultBean
 class EnvSecretFactory(
     @ConfigProperty(name = "hypersysClientId")
     private var hypersysClientId: String,
