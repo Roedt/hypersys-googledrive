@@ -1,6 +1,5 @@
 package no.roedt
 
-import io.quarkus.arc.DefaultBean
 import io.quarkus.arc.profile.IfBuildProfile
 import jakarta.enterprise.context.Dependent
 import org.eclipse.microprofile.config.inject.ConfigProperty

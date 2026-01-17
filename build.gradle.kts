@@ -1,3 +1,4 @@
+import io.quarkus.gradle.tasks.QuarkusDev
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -30,6 +31,11 @@ dependencies {
 
     implementation("io.quarkus:quarkus-smallrye-jwt")
     implementation("io.quarkus:quarkus-smallrye-jwt-build")
+
+    implementation(enforcedPlatform("com.google.auth:google-auth-library-bom:1.30.1"))
+
+    implementation("com.google.apis:google-api-services-drive:v3-rev20251210-2.0.0")
+    implementation("com.google.auth:google-auth-library-oauth2-http")
 }
 
 group = "no.roedt"
@@ -43,6 +49,9 @@ java {
 tasks.withType<Test> {
     systemProperty("java.util.logging.manager", "org.jboss.logmanager.LogManager")
     jvmArgs("--add-opens", "java.base/java.lang=ALL-UNNAMED")
+}
+tasks.withType<QuarkusDev> {
+    args = listOf("--add-opens", "java.base/java.lang=ALL-UNNAMED")
 }
 allOpen {
     annotation("jakarta.ws.rs.Path")
