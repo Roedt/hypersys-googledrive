@@ -58,7 +58,7 @@ jobs:
         uses: 'google-github-actions/auth@v3'
         with:
           project_id: '${{ env.PROJECT_ID }}'
-          workload_identity_provider: 'projects/regal-unfolding-483520-c9/locations/global/workloadIdentityPools/github-actions/providers/ghactions'
+          workload_identity_provider: 'projects/141014890750/locations/global/workloadIdentityPools/github-actions/providers/ghactions'
       - name: 'Set up Cloud SDK'
         uses: 'google-github-actions/setup-gcloud@v1'
         with:
