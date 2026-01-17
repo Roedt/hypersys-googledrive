@@ -1,9 +1,8 @@
-package no.roedt
+package no.roedt.hypersys
 
 import io.quarkus.arc.properties.IfBuildProperty
 import jakarta.enterprise.context.Dependent
-import no.roedt.hypersys.GyldigSystemToken
-import no.roedt.hypersys.HypersysRestClient
+import no.roedt.SecretFactory
 import no.roedt.hypersys.externalModel.Organisasjonsledd
 import org.eclipse.microprofile.rest.client.inject.RestClient
 import kotlin.io.encoding.Base64
