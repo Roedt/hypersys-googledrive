@@ -5,6 +5,7 @@ import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.core.MediaType
 import no.roedt.google.GoogleDriveService
+import no.roedt.hypersys.EkteHypersysService
 import no.roedt.hypersys.HypersysService
 import org.eclipse.microprofile.config.inject.ConfigProperty
 
@@ -19,9 +20,14 @@ class HypersysMotGoogleDriveResource(
     fun integrer() {
         val fraHypersys: Map<String, List<String?>> = hypersysService.hentFraHypersys("Rødt Oslo")
 
-        if (fraHypersys.size != 1 && !fraHypersys.keys.first().startsWith("Testlag")) {
+        if (fraHypersys.size > 1 && !fraHypersys.keys.first().startsWith("Testlag")) {
             println("Skal ikkje køyre på ordentleg per no")
             throw IllegalStateException("Forventa ikkje ekte hypersysdata")
+        }
+
+        if (hypersysService is EkteHypersysService) {
+            println("Gjer intenting mot ekte hypersys for no, returnerer")
+            return
         }
 
         googleDriveService.giTilgangTilMappe(fraHypersys, rotmappenavn)

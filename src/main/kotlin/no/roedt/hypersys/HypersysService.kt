@@ -21,6 +21,7 @@ class EkteHypersysService(
         val bearerToken = "Bearer ${hentBearerToken().access_token}"
 
         val alleLag = hypersysKlient.hentAlleLokallag(bearerToken)
+        println("Fann ${alleLag.size} aktuelle lag")
 
         val lagOgEposter = hypersysKlient.hentAlleLokallag(bearerToken)
             .filter { it.parent == alleLag.single { l -> l.name == lag }.id }
