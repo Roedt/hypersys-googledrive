@@ -67,3 +67,4 @@ jobs:
         with:
           service: '${{ env.APP }}'
           image: "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.APP }}/${{ env.APP }}:${{ github.sha }}"
+          region: '${{ env.GAR_LOCATION }}'
