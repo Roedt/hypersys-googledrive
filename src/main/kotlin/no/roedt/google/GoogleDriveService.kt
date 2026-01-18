@@ -92,7 +92,7 @@ class GoogleCredentialsDefaultsFactory : GoogleCredentialsFactory {
 
 @Dependent
 @IfBuildProfile("dev")
-class LocalCredentialsFactory(@ConfigProperty(name = "quarkus.google.cloud.service-account-location") val location: String) : GoogleCredentialsFactory {
+class LocalCredentialsFactory(@ConfigProperty(name = "google.cloud.service-account-location") val location: String) : GoogleCredentialsFactory {
     override fun createCredentials(): GoogleCredentials =
         GoogleCredentials
             .fromStream(Paths.get(location).inputStream())
