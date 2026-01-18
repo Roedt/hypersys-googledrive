@@ -13,7 +13,6 @@ env:
   GAR_LOCATION: 'europe-north1'
   PROJECT_ID: 'regal-unfolding-483520-c9'
   REGION: 'europe-north1'
-  SERVICE_ACCOUNT: 'gha'
 
 jobs:
   build:
@@ -48,7 +47,7 @@ jobs:
         with:
           project_id: '${{ env.PROJECT_ID }}'
           workload_identity_provider: 'projects/141014890750/locations/global/workloadIdentityPools/github-actions/providers/ghactions'
-          service_account: '${{ env.SERVICE_ACCOUNT }}'
+          service_account: '${{ secrets.SERVICE_ACCOUNT }}'
       - name: 'Set up Cloud SDK'
         uses: 'google-github-actions/setup-gcloud@v1'
         with:
