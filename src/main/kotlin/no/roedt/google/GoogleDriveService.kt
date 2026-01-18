@@ -20,6 +20,8 @@ class GoogleDriveService(val credentialsFactory: GoogleCredentialsFactory) {
     private val typeMappe = "application/vnd.google-apps.folder"
 
     fun giTilgangTilMappe(lagOgFolk: Map<String, List<String?>>, rotmappenavn: String) {
+        println("Bruker credentials-factory $credentialsFactory")
+
         val service = kopleMotGoogleDrive()
 
         val rotmappeId = finnRotmappe(service, rotmappenavn)
