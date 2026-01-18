@@ -41,7 +41,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          ./gradlew build --no-daemon
+          ./gradlew build
       - name: auth
         uses: 'google-github-actions/auth@v3'
         with:
