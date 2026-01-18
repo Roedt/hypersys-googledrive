@@ -21,11 +21,12 @@ class EkteHypersysService(
         val bearerToken = "Bearer ${hentBearerToken().access_token}"
 
         val alleLag = hypersysKlient.hentAlleLokallag(bearerToken)
-        println("Fann ${alleLag.size} aktuelle lag")
+        println("Fann ${alleLag.size} lag totalt")
+        val foreldrelag = alleLag.single { l -> l.name == lag }.id
 
-        val lagOgEposter = hypersysKlient.hentAlleLokallag(bearerToken)
-            .filter { it.parent == alleLag.single { l -> l.name == lag }.id }
+        val lagOgEposter = alleLag.filter { it.parent == foreldrelag }
             .associate { it.name to finnEposter(bearerToken, it) }
+        println("Fann ${lagOgEposter.size} aktuelle lag")
         // TODO: Den tomme return-en her er for å sikre at vi ikkje ved eit uhell faktisk lager ekte data
         return mapOf()
     }
