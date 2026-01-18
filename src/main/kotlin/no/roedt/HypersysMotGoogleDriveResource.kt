@@ -20,14 +20,16 @@ class HypersysMotGoogleDriveResource(
     fun integrer() {
         val fraHypersys: Map<String, List<String?>> = hypersysService.hentFraHypersys("Rødt Oslo")
 
-        if (fraHypersys.size > 1 && !fraHypersys.keys.first().startsWith("Testlag")) {
-            println("Skal ikkje køyre på ordentleg per no")
-            throw IllegalStateException("Forventa ikkje ekte hypersysdata")
-        }
-
         if (hypersysService is EkteHypersysService) {
             println("Gjer intenting mot ekte hypersys for no, returnerer")
             return
+        } else {
+            println("Bruker fake hypersys. Held fram.")
+        }
+
+        if (fraHypersys.size > 1 && fraHypersys.keys.firstOrNull()?.startsWith("Testlag") == false) {
+            println("Skal ikkje køyre på ordentleg per no")
+            throw IllegalStateException("Forventa ikkje ekte hypersysdata")
         }
 
         googleDriveService.giTilgangTilMappe(fraHypersys, rotmappenavn)
