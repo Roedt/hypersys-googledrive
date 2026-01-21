@@ -101,7 +101,7 @@ class GoogleDriveService(val credentialsFactory: GoogleCredentialsFactory) {
 
     private fun nesteUndernivaa(foreldrenivaa: List<Pair<File, String>>, service: Drive): List<Pair<File, String>> =
         foreldrenivaa.flatMap { nivaa1 ->
-            val undernivaa = service.files().list().setQ("mimeType = '$typeMappe' and '${nivaa1.first.id}' in parents").execute().files.map { it to nivaa1.second + "/" + it.name }
+            val undernivaa = finnUndermapper(service, nivaa1.first).map { it to nivaa1.second + "/" + it.name }
             undernivaa + nesteUndernivaa(undernivaa, service)
         }
 }
