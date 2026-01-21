@@ -65,22 +65,23 @@ class GoogleDriveService(val credentialsFactory: GoogleCredentialsFactory) {
         val mapper = mutableListOf(finnRotmappe(service, rotmappenavn) to rotmappenavn)
         mapper.addAll(nesteUndernivaa(mapper, service))
 
-        mapper.forEach { (_, path) ->  Paths.get("backup/$path").createDirectories() }
+        lagMapper(mapper)
+        lagreUnderfiler(mapper, service)
+    }
 
+    private fun lagMapper(mapper: MutableList<Pair<File, String>>) =
+        mapper.forEach { (_, path) -> Paths.get("backup/$path").createDirectories() }
+
+    private fun lagreUnderfiler(mapper: MutableList<Pair<File, String>>, service: Drive) =
         mapper.forEach { mappe ->
             val underfiler = finnFiler(service, "mimeType != '$TYPE_MAPPE' and '${mappe.first.id}' in parents")
             underfiler.forEach { fil -> lagreFil(fil, mappe, service) }
         }
-    }
 
-    private fun lagreFil(
-        fil: File,
-        mappe: Pair<File, String>,
-        service: Drive
-    ) {
-        if (fil.mimeType != "application/octet-stream") {
-            FileOutputStream("backup/${mappe.second}/${fil.name}.pdf").use { stream ->
-                service.files().export(fil.id, "application/pdf").executeMediaAndDownloadTo(stream)
+    private fun lagreFil(fil: File, mappe: Pair<File, String>, service: Drive) {
+        filtypemapping[fil.mimeType]?.let { (filtype, mimetype) ->
+            FileOutputStream("backup/${mappe.second}/${fil.name}.$filtype").use { stream ->
+                service.files().export(fil.id, mimetype).executeMediaAndDownloadTo(stream)
             }
         }
     }
@@ -91,3 +92,11 @@ class GoogleDriveService(val credentialsFactory: GoogleCredentialsFactory) {
             undernivaa + nesteUndernivaa(undernivaa, service)
         }
 }
+
+val filtypemapping = mapOf(
+    "application/octet-stream" to null, // veit ikkje heilt kva formatet er her
+    "application/vnd.google-apps.document" to Pair("odt", "application/vnd.oasis.opendocument.text"),
+    "application/vnd.google-apps.spreadsheet" to Pair("ods", "application/vnd.oasis.opendocument.spreadsheet"),
+    "application/vnd.google-apps.presentation" to Pair("odp", "application/vnd.oasis.opendocument.presentation"),
+    "application/vnd.google-apps.photo" to Pair("png", "image/png"),
+)
