@@ -13,6 +13,7 @@ import io.quarkus.arc.profile.UnlessBuildProfile
 import jakarta.enterprise.context.Dependent
 import org.eclipse.microprofile.config.inject.ConfigProperty
 import java.nio.file.Paths
+import kotlin.io.path.createDirectories
 import kotlin.io.path.inputStream
 
 @Dependent
@@ -88,6 +89,21 @@ class GoogleDriveService(val credentialsFactory: GoogleCredentialsFactory) {
         it.role = "writer"
         it.type = "user"
     }
+
+    fun backup(rotmappenavn: String) {
+        val service = kopleMotGoogleDrive()
+
+        val mapper = mutableListOf(finnRotmappe(service, rotmappenavn) to rotmappenavn)
+        mapper.addAll(nesteUndernivaa(mapper, service))
+
+        mapper.forEach { (_, path) ->  Paths.get("backup/$path").createDirectories() }
+    }
+
+    private fun nesteUndernivaa(foreldrenivaa: List<Pair<File, String>>, service: Drive): List<Pair<File, String>> =
+        foreldrenivaa.flatMap { nivaa1 ->
+            val undernivaa = service.files().list().setQ("mimeType = '$typeMappe' and '${nivaa1.first.id}' in parents").execute().files.map { it to nivaa1.second + "/" + it.name }
+            undernivaa + nesteUndernivaa(undernivaa, service)
+        }
 }
 
 interface GoogleCredentialsFactory {

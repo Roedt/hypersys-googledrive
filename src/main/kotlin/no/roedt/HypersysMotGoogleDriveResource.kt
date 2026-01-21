@@ -1,5 +1,6 @@
 package no.roedt
 
+import jakarta.enterprise.context.ApplicationScoped
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
@@ -9,12 +10,14 @@ import no.roedt.hypersys.EkteHypersysService
 import no.roedt.hypersys.HypersysService
 import org.eclipse.microprofile.config.inject.ConfigProperty
 
-@Path("/integrer")
+@ApplicationScoped
+@Path("/")
 class HypersysMotGoogleDriveResource(
     val hypersysService: HypersysService,
     val googleDriveService: GoogleDriveService,
     @ConfigProperty(name = "google.drive.rotmappenavn") val rotmappenavn: String,
 ) {
+    @Path("/integrer")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     fun integrer() {
@@ -33,5 +36,12 @@ class HypersysMotGoogleDriveResource(
         }
 
         googleDriveService.giTilgangTilMappe(fraHypersys, rotmappenavn)
+    }
+
+    @Path("/backup")
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    fun backup() {
+        googleDriveService.backup(rotmappenavn)
     }
 }
