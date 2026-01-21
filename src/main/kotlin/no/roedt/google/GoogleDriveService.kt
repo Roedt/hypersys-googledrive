@@ -5,41 +5,31 @@ import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.drive.Drive
 import com.google.api.services.drive.DriveScopes
 import com.google.api.services.drive.model.File
-import com.google.api.services.drive.model.Permission
 import com.google.auth.http.HttpCredentialsAdapter
 import com.google.auth.oauth2.GoogleCredentials
 import io.quarkus.arc.profile.IfBuildProfile
 import io.quarkus.arc.profile.UnlessBuildProfile
 import jakarta.enterprise.context.Dependent
 import org.eclipse.microprofile.config.inject.ConfigProperty
+import java.io.FileOutputStream
 import java.nio.file.Paths
 import kotlin.io.path.createDirectories
 import kotlin.io.path.inputStream
 
 @Dependent
 class GoogleDriveService(val credentialsFactory: GoogleCredentialsFactory) {
-    private val typeMappe = "application/vnd.google-apps.folder"
+    companion object {
+        const val TYPE_MAPPE = "application/vnd.google-apps.folder"
+    }
 
     fun giTilgangTilMappe(lagOgFolk: Map<String, List<String?>>, rotmappenavn: String) {
         println("Bruker credentials-factory $credentialsFactory")
 
         val service = kopleMotGoogleDrive()
-
         val rotmappeId = finnRotmappe(service, rotmappenavn)
-
         val undermapper = finnUndermapper(service, rotmappeId)
 
-        lagOgFolk.forEach { (lag, folk) ->
-            val lagetsMappe = undermapper.singleOrNull { it.name == lag }
-            if (lagetsMappe == null) {
-                lagMappe(service, lag, rotmappeId)
-            }
-            if (lagetsMappe != null) {
-                folk.filterNotNull().forEach { person ->
-                    giTilgangTilMappe(service, lagetsMappe, person)
-                }
-            }
-        }
+        Tilgangsstyrer.giTilgang(service, lagOgFolk, undermapper, rotmappeId)
     }
 
     private fun kopleMotGoogleDrive(): Drive = Drive.Builder(
@@ -52,42 +42,27 @@ class GoogleDriveService(val credentialsFactory: GoogleCredentialsFactory) {
 
     private fun finnRotmappe(service: Drive, rotmappenavn: String): File = (service.files().list()
         .setFields("files(id, parents)")
-        .setQ("mimeType = '$typeMappe' and name = '$rotmappenavn'")
+        .setQ("mimeType = '$TYPE_MAPPE' and name = '$rotmappenavn'")
         .execute()
         .filter { (((it.value as? File)))?.parents == null }
         ["files"] as List<*>)
         .single() as File
 
-    private fun lagMappe(service: Drive, lag: String, rotmappeId: File) =
-        service.files().create(File().also {
-            it.name = lag
-            it.parents = listOf(rotmappeId.id)
-            it.mimeType = typeMappe
-        }).execute()
+    private fun finnUndermapper(service: Drive, forelder: File): List<File> =
+        finnFiler(service, "mimeType = '$TYPE_MAPPE' and '${forelder.id}' in parents")
 
-    private fun finnUndermapper(service: Drive, forelder: File): List<File> {
+    private fun finnFiler(service: Drive, filter: String ): List<File> {
         var pageToken: String? = null
         val files = mutableListOf<File>()
         do {
             val result = service.files().list()
-                .setFields("files(id, name)")
+                .setFields("files(id, name, mimeType)")
                 .setPageToken(pageToken)
-                .setQ("mimeType = '$typeMappe' and '${forelder.id}' in parents").execute()
+                .setQ(filter).execute()
             files.addAll(result.files.filterNotNull())
             pageToken = result.nextPageToken
         } while (pageToken != null)
         return files
-    }
-
-    private fun giTilgangTilMappe(service: Drive, file: File, person: String) =
-        service.permissions()
-            .create(file.id, giTilgang(person)).execute()
-
-    private fun giTilgang(epost: String): Permission = Permission().also {
-        it.emailAddress = epost
-        it.kind = "drive#permission"
-        it.role = "writer"
-        it.type = "user"
     }
 
     fun backup(rotmappenavn: String) {
@@ -97,6 +72,23 @@ class GoogleDriveService(val credentialsFactory: GoogleCredentialsFactory) {
         mapper.addAll(nesteUndernivaa(mapper, service))
 
         mapper.forEach { (_, path) ->  Paths.get("backup/$path").createDirectories() }
+
+        mapper.forEach { mappe ->
+            val underfiler = finnFiler(service, "mimeType != '$TYPE_MAPPE' and '${mappe.first.id}' in parents")
+            underfiler.forEach { fil -> lagreFil(fil, mappe, service) }
+        }
+    }
+
+    private fun lagreFil(
+        fil: File,
+        mappe: Pair<File, String>,
+        service: Drive
+    ) {
+        if (fil.mimeType != "application/octet-stream") {
+            FileOutputStream("backup/${mappe.second}/${fil.name}.pdf").use { stream ->
+                service.files().export(fil.id, "application/pdf").executeMediaAndDownloadTo(stream)
+            }
+        }
     }
 
     private fun nesteUndernivaa(foreldrenivaa: List<Pair<File, String>>, service: Drive): List<Pair<File, String>> =
