@@ -64,11 +64,19 @@ class GoogleDriveService(val credentialsFactory: GoogleCredentialsFactory) {
             it.mimeType = typeMappe
         }).execute()
 
-    private fun finnUndermapper(service: Drive, forelder: File): List<File> = service.files().list()
-        .setFields("files(id, name)")
-        .setQ("mimeType = '$typeMappe' and '${forelder.id}' in parents").execute()
-        .files
-        .filterNotNull()
+    private fun finnUndermapper(service: Drive, forelder: File): List<File> {
+        var pageToken: String? = null
+        val files = mutableListOf<File>()
+        do {
+            val result = service.files().list()
+                .setFields("files(id, name)")
+                .setPageToken(pageToken)
+                .setQ("mimeType = '$typeMappe' and '${forelder.id}' in parents").execute()
+            files.addAll(result.files.filterNotNull())
+            pageToken = result.nextPageToken
+        } while (pageToken != null)
+        return files
+    }
 
     private fun giTilgangTilMappe(service: Drive, file: File, person: String) =
         service.permissions()
