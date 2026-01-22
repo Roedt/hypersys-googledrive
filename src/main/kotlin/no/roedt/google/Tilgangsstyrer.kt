@@ -31,8 +31,12 @@ object Tilgangsstyrer {
         }).execute()
 
     private fun giTilgangTilMappe(service: Drive, file: File, person: String) =
-        service.permissions()
-            .create(file.id, giTilgang(person)).execute()
+        if (!file.permissions.map { it.emailAddress }.contains(person)) {
+            service.permissions()
+                .create(file.id, giTilgang(person)).execute()
+        } else {
+            println("Personen har allereie tilgang til mappe ${file.name}")
+        }
 
     private fun giTilgang(epost: String): Permission = Permission().also {
         it.emailAddress = epost

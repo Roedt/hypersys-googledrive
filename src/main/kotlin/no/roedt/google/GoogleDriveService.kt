@@ -50,7 +50,7 @@ class GoogleDriveService(val credentialsFactory: GoogleCredentialsFactory) {
         val files = mutableListOf<File>()
         do {
             val result = service.files().list()
-                .setFields("files(id, name, mimeType)")
+                .setFields("files(id, name, mimeType, permissions)")
                 .setPageToken(pageToken)
                 .setQ(filter).execute()
             files.addAll(result.files.filterNotNull())
